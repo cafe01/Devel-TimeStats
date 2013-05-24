@@ -46,6 +46,7 @@
             "Text::ANSITable" : "0.13",
             "Time::HiRes" : "1.9725",
             "Tree::Simple" : "1.18",
+            "Tree::Simple::Visitor::FindByUID" : "0.02",
             "namespace::autoclean" : "0.13",
             "perl" : "5.008001"
          }
@@ -68,5 +69,5 @@
          "web" : "https://github.com/cafe01/Devel-TimeStats"
       }
    },
-   "version" : "0.01"
+   "version" : "0.02"
 }
