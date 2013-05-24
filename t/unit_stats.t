@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # Devel::TimeStats is a fork of Catalyst::Stats,
-# and this test is a copy of Catalyst-Runtime-5.90030/t/unit_stats.t
+# and this test is a fork of Catalyst-Runtime-5.90030/t/unit_stats.t
 #
 
 use strict;
@@ -92,7 +92,7 @@ BEGIN { use_ok("Devel::TimeStats") };
     push(@expected, [ 2, "- attach to uid", 0.1, 0 ]);
 
 
-    my @report = $stats->report;
+    my @report = map { pop(@$_); $_ } $stats->report; # remove percentage column, tested in percentage.t
     is_deeply(\@report, \@expected, "report");
 
     # print scalar($stats->report);

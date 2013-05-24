@@ -1,5 +1,7 @@
 package Devel::TimeStats;
 
+our $VERSION = '0.01';
+
 use Moo;
 use namespace::autoclean;
 use Time::HiRes qw/gettimeofday tv_interval/;
@@ -22,7 +24,7 @@ has stack => (
               default => sub { [ shift->tree ] }
              );
 
-has color_schema => (
+has color_map => (
     is => 'ro',
     isa => sub{ ref $_ eq 'HASH' },
     default => sub{{
@@ -32,6 +34,10 @@ has color_schema => (
         '0.5'  => 'FF0000',
     }}
 );
+
+has percentage_decimal_precision => (is => 'ro', required => 1, default => sub { 0 } );
+
+has report_border_style => (is => 'ro', required => 1, default => sub { 'Default::single_ascii' } );
 
 sub profile {
     my $self = shift;
@@ -105,13 +111,13 @@ sub elapsed {
 sub report {
     my $self = shift;
     
-    my $total_duration = tv_interval($self->tree->getNodeValue->{t});
+    my $total_duration = 0;
+    $total_duration += $_->getNodeValue->{elapsed} for $self->tree->getAllChildren;
 
-    my $column_width = 80;
-    #my $t = Text::SimpleTable->new( [ $column_width, 'Action' ], [ 9, 'Time' ] );
-    my $t = Text::ANSITable->new( use_utf8 => 0 );
-    
+    my $t = Text::ANSITable->new( use_utf8 => 0, border_style => $self->report_border_style );
+    $t->border_style($self->report_border_style);    
     $t->columns([qw/ Action Time % /]);
+    
     my @results;
     $self->traverse(
                 sub {
@@ -122,17 +128,18 @@ sub report {
                       ($stat->{action} && $stat->{comment} ? " " : "") . ($stat->{comment} ? '- ' . $stat->{comment} : ""),
                       $stat->{elapsed},
                       $stat->{action} ? 1 : 0,
+                      ($stat->{elapsed} * 100) / $total_duration
                       );
                 # Trim down any times >= 10 to avoid ugly Text::Simple line wrapping
                 my $elapsed = substr(sprintf("%f", $stat->{elapsed}), 0, 8) . "s";
                 
                 my $color = '';
-                foreach my $key (sort { $a <=> $b } keys %{$self->color_schema}) {
-                    $color = $self->color_schema->{$key} if $stat->{elapsed} >= $key;                    
+                foreach my $key (sort { $a <=> $b } keys %{$self->color_map}) {
+                    $color = $self->color_map->{$key} if $stat->{elapsed} >= $key;                    
                 }
                 
-                # calc %
-                my $share = sprintf "%2.1f%%", ($stat->{elapsed} * 100) / $total_duration;
+                # format %
+                my $share = sprintf "%2.".$self->percentage_decimal_precision."f%%", $r[4];
                 
                 $t->add_row([( q{ } x $r[0] ) . $r[1], defined $r[2] ? $elapsed : '??', $share], { fgcolor => $color });
                 push(@results, \@r);
@@ -187,45 +194,242 @@ sub getNodeValue {
 
 
 1;
+
+
 __END__
 
-=encoding utf-8
+=for stopwords addChild getNodeValue mysub rollup setNodeValue
 
 =head1 NAME
 
-Devel::TimeStats - Yet Another Timing Statistics Class
+Devel::TimeStats - Timing Statistics Class (Catalyst::Stats fork)
 
 =head1 SYNOPSIS
 
     use Devel::TimeStats;
-    
-    my $ts = Devel::TimeStats->new;
-    
-    $ts->profile( begin => 'some task');
-    
-    do_foo();
-    
-    $ts->profile('done foo');
-        
-    do_bar();
-    
-    $ts->profile('done bar');
-        
-    $ts->profile( end => 'some task');
-    
-    
-    
-    
+
+    my $stats = Devel::TimeStats->new;
+
+    $stats->enable(1);
+    $stats->profile($comment);
+    $stats->profile(begin => $block_name, comment =>$comment);
+    $stats->profile(end => $block_name);
+    $elapsed = $stats->elapsed;
+    $report = $stats->report;
+    @report = $stats->report;
 
 =head1 DESCRIPTION
 
-Devel::TimeStats is ...
+This module is a fork of Catalyst::Stats, a timing statistics module.
+Tracks elapsed time between profiling points and (possibly nested) blocks.
 
-=head1 LICENSE
+Typical usage might be like this:
 
-Copyright (C) Carlos Fernando Avila Gratz.
+    my $stats = Devel::TimeStats->new;
+        
+    $stats->profile( begin => 'interesting task' );
+    
+    run_step_1();
+    $stats->profile( 'completed step 1' );
+    
+    run_step_2();
+    $stats->profile( 'completed step 2' );
+    
+    run_step_3();
+    $stats->profile( 'completed step 3' );
+    
+    run_step_4();
+    $stats->profile( 'completed step 4' );
+    
+    run_step_5();
+    $stats->profile( 'completed step 5' );
+    
+    # ... time spent here also accounted in the 'interesting task' block
+    
+    $stats->profile( end => 'interesting task' );
+    
+    print scalar $stats->report;
 
-This library is free software; you can redistribute it and/or modify
+example report:
+
+    .---------------------+-----------+------.
+    | Action              |   Time    | %    |   # percentage helps blaming 
+    +---------------------+-----------+------+
+    | interesting task    | 0.661000s | 100% |   
+    |  - completed step 1 | 0.001000s |  0%  |
+    |  - completed step 2 | 0.010000s |  2%  |   # took >= 10ms, yellow (by default)
+    |  - completed step 3 | 0.050000s |  8%  |   # took >= 50ms, bright yellow (by default)
+    |  - completed step 4 | 0.100000s | 15%  |   # took >= 100ms, red (by default)
+    |  - completed step 5 | 0.500000s | 76%  |   # took >= 500ms, bright red (by default)
+    `---------------------+-----------+------'
+
+You can configure the L</color_map> and L</percentage_decimal_precision>.
+
+=head1 METHODS
+
+=head2 new
+
+Constructor.
+
+    $stats = Catalyst::Stats->new(%options);
+
+Valid options:
+
+=over 4
+
+=item C<enable>
+
+Default C<1>
+
+=item C<color_map>
+
+A hashref mapping a duration threshold (in seconds) to a color. 
+Default:
+
+    {
+        '0.01' => 'aaaa00', 
+        '0.05' => 'FFFF00',
+        '0.1'  => 'aa0000',
+        '0.5'  => 'FF0000',
+    }    
+
+
+=item C<percentage_decimal_precision>
+
+How many decimal places for the percentage column. 
+Default C<0>.
+
+=item C<report_border_style>
+
+The border style used for the report table. 
+See L<Text::ANSITable/BORDER STYLES> for possible values.
+Default C<Default::single_ascii>.
+
+=back
+
+=head2 enable
+
+    $stats->enable(0);
+    $stats->enable(1);
+
+Enable or disable stats collection.  By default, stats are enabled after object creation.
+
+=head2 profile
+
+    $stats->profile($comment);
+    $stats->profile(begin => $block_name, comment =>$comment);
+    $stats->profile(end => $block_name);
+
+Marks a profiling point.  These can appear in pairs, to time the block of code
+between the begin/end pairs, or by themselves, in which case the time of
+execution to the previous profiling point will be reported.
+
+The argument may be either a single comment string or a list of name-value
+pairs.  Thus the following are equivalent:
+
+    $stats->profile($comment);
+    $stats->profile(comment => $comment);
+
+The following key names/values may be used:
+
+=over 4
+
+=item * begin => ACTION
+
+Marks the beginning of a block.  The value is used in the description in the
+timing report.
+
+=item * end => ACTION
+
+Marks the end of the block.  The name given must match a previous 'begin'.
+Correct nesting is recommended, although this module is tolerant of blocks that
+are not correctly nested, and the reported timings should accurately reflect the
+time taken to execute the block whether properly nested or not.
+
+=item * comment => COMMENT
+
+Comment string; use this to describe the profiling point.  It is combined with
+the block action (if any) in the timing report description field.
+
+=item * uid => UID
+
+Assign a predefined unique ID.  This is useful if, for whatever reason, you wish
+to relate a profiling point to a different parent than in the natural execution
+sequence.
+
+=item * parent => UID
+
+Explicitly relate the profiling point back to the parent with the specified UID.
+The profiling point will be ignored if the UID has not been previously defined.
+
+=back
+
+Returns the UID of the current point in the profile tree.  The UID is
+automatically assigned if not explicitly given.
+
+=head2 created
+
+    ($seconds, $microseconds) = $stats->created;
+
+Returns the time the object was created, in C<gettimeofday> format, with
+Unix epoch seconds followed by microseconds.
+
+=head2 elapsed
+
+    $elapsed = $stats->elapsed
+
+Get the total elapsed time (in seconds) since the object was created.
+
+=head2 report
+
+    print $stats->report ."\n";
+    $report = $stats->report;
+    @report = $stats->report;
+
+In scalar context, generates a textual report.  In array context, returns the
+array of results where each row comprises:
+
+    [ depth, description, time, rollup, percentage ]
+
+The depth is the calling stack level of the profiling point.
+
+The description is a combination of the block name and comment.
+
+The time reported for each block is the total execution time for the block, and
+the time associated with each intermediate profiling point is the elapsed time
+from the previous profiling point.
+
+The 'rollup' flag indicates whether the reported time is the rolled up time for
+the block, or the elapsed time from the previous profiling point.
+
+The percentage of total time (floating-point number).
+
+=head1 COMPATIBILITY METHODS
+
+Some components might expect the stats object to be a regular Tree::Simple object.
+We've added some compatibility methods to handle this scenario:
+
+=head2 accept
+
+=head2 addChild
+
+=head2 setNodeValue
+
+=head2 getNodeValue
+
+=head2 traverse
+
+=head1 SEE ALSO
+
+L<Catalyst::Stats>
+
+=head1 THANKS TO
+
+Catalyst Contributors
+
+=head1 COPYRIGHT
+
+This library is free software. You can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =head1 AUTHOR

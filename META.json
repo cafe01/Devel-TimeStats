@@ -1,10 +1,10 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "Timing Statistics Class (Catalyst::Stats fork)",
    "author" : [
       "Carlos Fernando Avila Gratz <cafe@q1software.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v0.4.2, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Minilla/v0.4.4, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -37,12 +37,17 @@
             "Test::CPAN::Meta" : "0",
             "Test::MinimumVersion" : "0.10108",
             "Test::Pod" : "1.41",
-            "Test::Spellunker" : "v0.2.2"
+            "Test::Spellunker" : "v0.2.7"
          }
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005"
+            "Moo" : "1.002",
+            "Text::ANSITable" : "0.13",
+            "Time::HiRes" : "1.9725",
+            "Tree::Simple" : "1.18",
+            "namespace::autoclean" : "0.13",
+            "perl" : "5.008001"
          }
       },
       "test" : {
@@ -52,5 +57,16 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/cafe01/Devel-TimeStats/issues"
+      },
+      "homepage" : "https://github.com/cafe01/Devel-TimeStats",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/cafe01/Devel-TimeStats.git",
+         "web" : "https://github.com/cafe01/Devel-TimeStats"
+      }
+   },
    "version" : "0.01"
 }
