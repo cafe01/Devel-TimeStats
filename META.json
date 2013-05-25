@@ -43,7 +43,8 @@
       "runtime" : {
          "requires" : {
             "Moo" : "1.002",
-            "Text::ANSITable" : "0.13",
+            "Text::UnicodeTable::Simple" : "0.08",
+            "Term::ExtendedColor" : "0.224",
             "Time::HiRes" : "1.9725",
             "Tree::Simple" : "1.18",
             "Tree::Simple::Visitor::FindByUID" : "0.02",
