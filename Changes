@@ -1,6 +1,13 @@
 Revision history for Perl extension Devel-TimeStats
 
 {{$NEXT}}
+    
+    - removed report_border_style attribute and doc
+      (cafe01)
+    - support Perl 5.8
+      - Text::ANSITable depends on Perl 5.10. Removed that dependency.
+      - replaced by Text::UnicodeTable::Simple + Term::ExtendedColor
+      (Dai Okabayashi) 
 
 0.02 2013-05-24T22:49:36Z
 

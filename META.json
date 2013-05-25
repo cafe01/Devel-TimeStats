@@ -43,8 +43,8 @@
       "runtime" : {
          "requires" : {
             "Moo" : "1.002",
-            "Text::UnicodeTable::Simple" : "0.08",
             "Term::ExtendedColor" : "0.224",
+            "Text::UnicodeTable::Simple" : "0.08",
             "Time::HiRes" : "1.9725",
             "Tree::Simple" : "1.18",
             "Tree::Simple::Visitor::FindByUID" : "0.02",
@@ -70,5 +70,8 @@
          "web" : "https://github.com/cafe01/Devel-TimeStats"
       }
    },
-   "version" : "0.02"
+   "version" : "0.02",
+   "x_contributors" : [
+      "bayashi <bayashi@cpan.org>"
+   ]
 }

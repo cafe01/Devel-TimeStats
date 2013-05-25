@@ -105,12 +105,6 @@ Valid options:
     How many decimal places for the percentage column. 
     Default `0`.
 
-- `report_border_style`
-
-    The border style used for the report table. 
-    See ["BORDER STYLES" in Text::ANSITable](http://search.cpan.org/perldoc?Text::ANSITable#BORDER STYLES) for possible values.
-    Default `Default::single_ascii`.
-
 ## enable
 
     $stats->enable(0);
