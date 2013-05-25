@@ -38,7 +38,6 @@ has color_map => (
 
 has percentage_decimal_precision => (is => 'ro', required => 1, default => sub { 0 } );
 
-has report_border_style => (is => 'ro', required => 1, default => sub { 'Default::single_ascii' } );
 
 sub profile {
     my $self = shift;
@@ -303,12 +302,6 @@ Default:
 
 How many decimal places for the percentage column. 
 Default C<0>.
-
-=item C<report_border_style>
-
-The border style used for the report table. 
-See L<Text::ANSITable/BORDER STYLES> for possible values.
-Default C<Default::single_ascii>.
 
 =back
 
