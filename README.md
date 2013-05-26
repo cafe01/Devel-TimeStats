@@ -92,13 +92,13 @@ Valid options:
     Default:
 
         {
-            '0.01' => 'aaaa00', 
-            '0.05' => 'FFFF00',
-            '0.1'  => 'aa0000',
-            '0.5'  => 'FF0000',
+            '0.01' => 'yellow3',
+            '0.05' => 'yellow1',
+            '0.1'  => 'red3',
+            '0.5'  => 'red1',
         }    
 
-
+    See ["COLORS AND ATTRIBUTES" in Term::ExtendedColor](http://search.cpan.org/perldoc?Term::ExtendedColor#COLORS AND ATTRIBUTES).
 
 - `percentage_decimal_precision`
 
