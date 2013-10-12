@@ -275,7 +275,7 @@ You can configure the L</color_map> and L</percentage_decimal_precision>.
 
 Constructor.
 
-    $stats = Catalyst::Stats->new(%options);
+    $stats = Devel::TimeStats->new(%options);
 
 Valid options:
 
